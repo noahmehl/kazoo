@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @copyright (C) 2012, VoIP, INC
+%%% @copyright (C) 2012-2013, 2600Hz, INC
 %%% @doc
 %%%
 %%% @end
@@ -18,15 +18,15 @@
 %% Starts the app for inclusion in a supervisor tree
 %% @end
 %%--------------------------------------------------------------------
--spec start_link/0 :: () -> startlink_ret().
+-spec start_link() -> startlink_ret().
 start_link() ->
     _ = start_deps(),
     wh_amqp_sup:start_link().
 
--spec start/0 :: () -> 'ok' | {'error', _}.
+-spec start() -> 'ok' | {'error', _}.
 start() ->
     _ = start_deps(),
-    application:start(whistle_amqp, permanent).
+    application:start('whistle_amqp', 'permanent').
 
 %%--------------------------------------------------------------------
 %% @public
@@ -34,9 +34,9 @@ start() ->
 %% Stop the app
 %% @end
 %%--------------------------------------------------------------------
--spec stop/0 :: () -> 'ok'.
+-spec stop() -> 'ok'.
 stop() ->
-    application:stop(whistle_amqp).
+    application:stop('whistle_amqp').
 
 %%--------------------------------------------------------------------
 %% @private
@@ -44,7 +44,7 @@ stop() ->
 %% Ensures that all dependencies for this app are already running
 %% @end
 %%--------------------------------------------------------------------
--spec start_deps/0 :: () -> 'ok'.
+-spec start_deps() -> 'ok'.
 start_deps() ->
     _ = [wh_util:ensure_started(App) || App <- [sasl, amqp_client]],
-    ok.
+    'ok'.
