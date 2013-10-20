@@ -28,6 +28,11 @@
                                               ,{<<"type">>, <<"string">>}
                                               ,{<<"required">>, 'true'}
                                              ])).
+-define(MSG_ID_SCHEMA, wh_json:from_list([{<<"description">>, <<"Unique ID of the request">>}
+                                          ,{<<"type">>, <<"string">>}
+                                          ,{<<"default">>, wh_util:rand_hex_binary(16)}
+                                         ])).
+
 -define(DEFAULT_HEADERS_SCHEMA
         ,wh_json:from_list([{<<"Server-ID">>, ?SERVER_ID_SCHEMA}
                             ,{<<"App-Name">>, ?APP_NAME_SCHEMA}
@@ -35,6 +40,7 @@
                             ,{<<"Node">>, ?NODE_SCHEMA}
                             ,{<<"Event-Name">>, ?EVENT_NAME_SCHEMA}
                             ,{<<"Event-Category">>, ?EVENT_CATEGORY_SCHEMA}
+                            ,{<<"Msg-ID">>, ?MSG_ID_SCHEMA}
                            ])).
 
 -endif.

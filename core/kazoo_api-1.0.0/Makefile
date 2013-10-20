@@ -1,4 +1,4 @@
-PROJECT = jesse
+PROJECT = kazoo_api
 ROOT = ../..
 DIALYZER = dialyzer
 
