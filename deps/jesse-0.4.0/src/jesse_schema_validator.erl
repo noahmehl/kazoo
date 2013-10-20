@@ -424,9 +424,6 @@ wrong_type(Value, State) ->
 %% order of the instance properties MAY be in any order.
 %% @private
 check_properties(Value, Properties, State) ->
-  lager:debug("state: '~p'", [State]),
-  lager:debug("value: '~p'", [Value]),
-  lager:debug("props: '~p'", [Properties]),
   TmpState
     = lists:foldl( fun({PropertyName, PropertySchema}, CurrentState) ->
                        case get_path(PropertyName, Value) of
@@ -470,7 +467,7 @@ maybe_add_default(_PropertyName, _DefaultValue, #state{resulting_data='undefined
   lager:debug("no resulting_data in state for ~s: ~p", [_PropertyName, _DefaultValue]),
   State;
 maybe_add_default(PropertyName, DefaultValue, #state{resulting_data={Data}}=CurrentState) ->
-  lager:debug("default value: '~p'", [DefaultValue]),
+  lager:debug("default value for ~s: '~p'", [PropertyName, DefaultValue]),
   CurrentState#state{resulting_data={[{PropertyName, DefaultValue}|Data]}}.
 
 %% @doc 5.3.  patternProperties
