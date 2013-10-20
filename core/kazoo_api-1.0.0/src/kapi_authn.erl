@@ -19,10 +19,8 @@ req(Prop) when is_list(Prop) ->
     req(wh_json:from_list(Prop));
 req(JObj) ->
     case req_v(JObj) of
-        {'pass', FixedJObj} -> kz_api:build_message(FixedJObj);
         {'ok', FixedJObj} -> kz_api:build_message(FixedJObj);
         {'error', Errors} -> {'error', Errors};
-        {'fail', Errors} -> {'error', Errors};
         'false' -> {'error', "API failed validation for authn_req"}
     end.
 
@@ -31,5 +29,4 @@ req_v(Prop) when is_list(Prop) ->
     req_v(wh_json:from_list(Prop));
 req_v(JObj) ->
     {'ok', Schema} = kz_api:find_schema(<<"authn_req">>),
-    jesse:validate_with_schema(Schema, JObj, [{'allowed_errors', 'infinity'}]).
-%%wh_json_validator:is_valid(JObj, Schema).
+    jesse:validate_with_schema(Schema, JObj).
