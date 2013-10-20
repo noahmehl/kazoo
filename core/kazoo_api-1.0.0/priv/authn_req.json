@@ -1,0 +1,55 @@
+{
+  "_id":"authn_req"
+  ,"$schema":"http://json-schema.org/draft-04/schema#"
+  ,"description":"Call Authentication Request"
+  ,"title":"Call Authentication Request"
+  ,"properties":{
+     "Event-Category":{
+       "type":"string"
+       ,"enum":["directory"]
+       ,"default":"directory"
+      }
+     ,"Event-Name":{
+        "type":"string"
+        ,"enum":["authn_req"]
+        ,"default":"authn_req"
+       }
+     ,"To":{
+        "description":"SIP To field"
+        ,"required":true
+        ,"type":"string"
+       }
+     ,"From":{
+        "description":"SIP From field"
+        ,"required":true
+        ,"type":"string"
+       }
+     ,"Auth-User":{
+        "description":"SIP Username to authenticate"
+        ,"required":true
+        ,"type":"string"
+       }
+     ,"Auth-Realm":{
+        "description":"SIP Realm of the username"
+        ,"required":true
+        ,"type":"string"
+       }
+     ,"Method":{
+        "description":"SIP Request Method"
+        ,"type":"string"
+        ,"enum":["REGISTER","INVITE"]
+       }
+     ,"Switch-Hostname":{
+        "description":"Hostname of the switch receiving the REGISTER"
+        ,"format":"hostname"
+       }
+     ,"Orig-IP":{
+        "description":"The IP in the X-AUTH-IP Header (usually the endpoint's public IP)"
+        ,"format":"ipv4"
+       }
+     ,"Call-ID":{
+        "description":"SIP Call ID of the REGISTER packet"
+        ,"type":"string"
+       }
+    }
+}

@@ -1,0 +1,17 @@
+{application, kazoo_api
+ ,[
+   {description, "Kazoo AMQP API builder/validator"}
+   ,{vsn, "1.0.0"}
+   ,{modules, []}
+   ,{registered, []}
+   ,{applications
+     ,[
+       kernel
+       ,stdlib
+       ,crypto
+       ,sasl
+      ]}
+   ,{mod, {kazoo_api_app, []}
+    }
+   ,{env, []}
+ ]}.
