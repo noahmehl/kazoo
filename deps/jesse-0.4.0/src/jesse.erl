@@ -88,7 +88,7 @@ add_schema(Key, Schema) ->
                 ) -> ok | error().
 add_schema(Key, Schema, Options) ->
   try
-    ParserFun    = proplists:get_value(parser_fun, Options, fun(X) -> X end),
+    ParserFun    = props:get_value(parser_fun, Options, fun(X) -> X end),
     ParsedSchema = try_parse(schema, ParserFun, Schema),
     add_schema(Key, ParsedSchema)
   catch
@@ -163,7 +163,7 @@ validate(Schema, Data) ->
                  | error().
 validate(Schema, Data, Options) ->
   try
-    ParserFun  = proplists:get_value(parser_fun, Options, fun(X) -> X end),
+    ParserFun  = props:get_value(parser_fun, Options, fun(X) -> X end),
     ParsedData = try_parse(data, ParserFun, Data),
     JsonSchema = jesse_database:read(Schema),
     jesse_schema_validator:validate(JsonSchema, ParsedData, Options)
@@ -193,13 +193,15 @@ validate_with_schema(Schema, Data) ->
                              | error().
 validate_with_schema(Schema, Data, Options) ->
   try
-    ParserFun    = proplists:get_value(parser_fun, Options, fun(X) -> X end),
+    ParserFun    = props:get_value(parser_fun, Options, fun identity/1),
     ParsedSchema = try_parse(schema, ParserFun, Schema),
     ParsedData   = try_parse(data, ParserFun, Data),
     jesse_schema_validator:validate(ParsedSchema, ParsedData, Options)
   catch
     throw:Error -> {error, Error}
   end.
+
+identity(X) -> X.
 
 %%% Internal functions
 %% @doc Wraps up calls to a third party json parser.

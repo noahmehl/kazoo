@@ -1107,11 +1107,11 @@ compare_properties(Value1, Value2) ->
 %%=============================================================================
 %% @private
 new_state(JsonSchema, Options) ->
-  ErrorHandler  = proplists:get_value( error_handler
+  ErrorHandler  = props:get_value( error_handler
                                      , Options
                                      , fun default_error_handler/3
                                      ),
-  AllowedErrors = proplists:get_value( allowed_errors
+  AllowedErrors = props:get_value( allowed_errors
                                      , Options
                                      , 0
                                      ),
