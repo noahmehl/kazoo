@@ -424,50 +424,49 @@ wrong_type(Value, State) ->
 %% order of the instance properties MAY be in any order.
 %% @private
 check_properties(Value, Properties, State) ->
-  TmpState
-    = lists:foldl( fun({PropertyName, PropertySchema}, CurrentState) ->
-                       case get_path(PropertyName, Value) of
-                         [] ->
+  {TmpState, _}
+    = lists:foldl(fun check_properties_fold/2
+                  ,{State, Value}
+                  ,Properties
+                 ),
+  set_current_schema(TmpState, get_current_schema(State)).
+
+check_properties_fold({PropertyName, PropertySchema}, {CurrentState, Value}) ->
+  case get_path(PropertyName, Value) of
+    Empty when Empty =:= [] orelse Empty =:= <<>> ->
 %% @doc 5.7.  required
 %%
 %% This attribute indicates if the instance must have a value, and not
 %% be undefined.  This is false by default, making the instance
 %% optional.
 %% @end
-                           case get_path(?REQUIRED, PropertySchema) of
-                             'true' ->
-                               Error = { ?data_invalid
-                                         , get_current_schema(CurrentState)
-                                         , ?missing_required_property
-                                         , Value
-                                       },
-                               handle_error(Error, CurrentState);
-                             _    ->
-                               maybe_add_default(PropertyName, get_path(?DEFAULT, PropertySchema), CurrentState)
-                           end;
-                         Property ->
-                           NewState = set_current_schema( CurrentState
-                                                          , PropertySchema
-                                                        ),
-                           check_value( Property
-                                        , unwrap(PropertySchema)
-                                        , NewState
-                                      )
-                       end
-                   end
-                   , State
-                   , Properties
-                 ),
-  set_current_schema(TmpState, get_current_schema(State)).
+      case get_path(?REQUIRED, PropertySchema) of
+        'true' ->
+          Error = { ?data_invalid
+                    , get_current_schema(CurrentState)
+                    , ?missing_required_property
+                    , Value
+                  },
+          {handle_error(Error, CurrentState), Value};
+        _    ->
+          {maybe_add_default(PropertyName, get_path(?DEFAULT, PropertySchema), CurrentState), Value}
+      end;
+    Property ->
+      NewState = set_current_schema( CurrentState
+                                     , PropertySchema
+                                   ),
+      {check_value( Property
+                    , unwrap(PropertySchema)
+                    , NewState
+                  ), Value}
+  end.
 
+-spec maybe_add_default(binary(), list() | binary(), #state{}) -> #state{}.
 maybe_add_default(_PropertyName, [], CurrentState) ->
-  lager:debug("no default value for ~s", [_PropertyName]),
   CurrentState;
 maybe_add_default(_PropertyName, _DefaultValue, #state{resulting_data='undefined'}=State) ->
-  lager:debug("no resulting_data in state for ~s: ~p", [_PropertyName, _DefaultValue]),
   State;
 maybe_add_default(PropertyName, DefaultValue, #state{resulting_data={Data}}=CurrentState) ->
-  lager:debug("default value for ~s: '~p'", [PropertyName, DefaultValue]),
   CurrentState#state{resulting_data={[{PropertyName, DefaultValue}|Data]}}.
 
 %% @doc 5.3.  patternProperties
