@@ -119,10 +119,8 @@ validate(JsonSchema, Value, Options) ->
   {result(NewState), result_data(NewState, Value)}.
 
 result_data(#state{resulting_data='undefined'}, Value) ->
-  lager:debug("no resulting data"),
   Value;
 result_data(#state{resulting_data=Data}, _Value) ->
-  lager:debug("using resulting data"),
   Data.
 
 result(State) ->
@@ -165,7 +163,6 @@ is_json_object(_)                                   -> false.
 check_value({Key, Value}, Schema, State) ->
   case check_value(Value, Schema, State) of
     State ->
-      lager:debug("adding {~p, ~p} to result", [Key, Value]),
       add_validated_data(Key, Value, State);
     NewState -> NewState
   end;
@@ -374,7 +371,6 @@ check_value(Value, [_Attr | Attrs], State) ->
 %%  {"type":["string","number"]}
 %% @private
 check_type(Value, Type, State) ->
-  lager:debug("checking type ~p against value ~p", [Type, Value]),
   case is_type_valid(Value, Type) of
     true  -> State;
     false -> wrong_type(Value, State)
@@ -464,7 +460,6 @@ check_properties_fold({PropertyName, PropertySchema}, {CurrentState, Value}) ->
           {maybe_add_default(PropertyName, get_path(?DEFAULT, PropertySchema), CurrentState), Value}
       end;
     Property ->
-      lager:debug("checking property ~p against name ~p schema ~p", [Property, PropertyName, PropertySchema]),
       NewState = set_current_schema(CurrentState
                                     ,PropertySchema
                                    ),
