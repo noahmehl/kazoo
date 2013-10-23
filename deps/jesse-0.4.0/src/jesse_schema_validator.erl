@@ -99,6 +99,7 @@
          , error_list      :: list()
          , error_handler   :: fun((#state{}) -> list() | no_return())
          , resulting_data  :: jesse:json_term()
+         , strict          :: boolean() % will strip un-validated fields
          }
        ).
 
@@ -107,19 +108,21 @@
 %% @doc Validates json `Data' against `Schema' with `Options'.
 %% If the given json is valid, then it is returned to the caller as is,
 %% otherwise an exception will be thrown.
--spec validate( JsonSchema :: jesse:json_term()
-              , Data       :: jesse:json_term()
-              , Options    :: [{Key :: atom(), Data :: any()}]
-              ) -> {ok, jesse:json_term()}
-                 | no_return().
+-spec validate(jesse:json_term()
+               ,jesse:json_term()
+               ,[{atom(), any()}]
+              ) -> {ok, jesse:json_term()} |
+                   no_return().
 validate(JsonSchema, Value, Options) ->
   State    = new_state(JsonSchema, Value, Options),
   NewState = check_value(Value, unwrap(JsonSchema), State),
   {result(NewState), result_data(NewState, Value)}.
 
 result_data(#state{resulting_data='undefined'}, Value) ->
+  lager:debug("no resulting data"),
   Value;
 result_data(#state{resulting_data=Data}, _Value) ->
+  lager:debug("using resulting data"),
   Data.
 
 result(State) ->
@@ -131,7 +134,7 @@ result(State) ->
 %% @doc Returns value of "id" field from json object `Schema', assuming that
 %% the given json object has such a field, otherwise an exception
 %% will be thrown.
--spec get_schema_id(Schema :: jesse:json_term()) -> string().
+-spec get_schema_id(jesse:json_term()) -> string().
 get_schema_id(Schema) ->
   case get_path(?ID, Schema) of
     [] -> throw({schema_invalid, Schema, missing_id_field});
@@ -159,14 +162,21 @@ is_json_object(_)                                   -> false.
 %% @doc Goes through attributes of the given schema `JsonSchema' and
 %% validates the value `Value' against them.
 %% @private
+check_value({Key, Value}, Schema, State) ->
+  case check_value(Value, Schema, State) of
+    State ->
+      lager:debug("adding {~p, ~p} to result", [Key, Value]),
+      add_validated_data(Key, Value, State);
+    NewState -> NewState
+  end;
 check_value(Value, [{?TYPE, Type} | Attrs], State) ->
   NewState = check_type(Value, Type, State),
   check_value(Value, Attrs, NewState);
 check_value(Value, [{?PROPERTIES, Properties} | Attrs], State) ->
   NewState = case is_json_object(Value) of
-               true  -> check_properties( Value
-                                        , unwrap(Properties)
-                                        , State
+               true  -> check_properties(Value
+                                         ,unwrap(Properties)
+                                         ,State
                                         );
                false -> State
              end,
@@ -176,9 +186,9 @@ check_value( Value
            , State
            ) ->
   NewState = case is_json_object(Value) of
-               true  -> check_pattern_properties( Value
-                                                , PatternProperties
-                                                , State
+               true  -> check_pattern_properties(Value
+                                                 ,PatternProperties
+                                                 ,State
                                                 );
                false -> State
              end,
@@ -188,12 +198,12 @@ check_value( Value
            , State
            ) ->
   NewState = case is_json_object(Value) of
-               true  -> check_additional_properties( Value
-                                                   , AdditionalProperties
-                                                   , State
+               true  -> check_additional_properties(Value
+                                                    ,AdditionalProperties
+                                                    ,State
                                                    );
                false -> State
-       end,
+             end,
   check_value(Value, Attrs, NewState);
 check_value(Value, [{?ITEMS, Items} | Attrs], State) ->
   NewState = case is_array(Value) of
@@ -203,9 +213,9 @@ check_value(Value, [{?ITEMS, Items} | Attrs], State) ->
   check_value(Value, Attrs, NewState);
 %% doesn't really do anything, since this attribute will be handled
 %% by the previous function clause if it's presented in the schema
-check_value( Value
-           , [{?ADDITIONALITEMS, _AdditionalItems} | Attrs]
-           , State
+check_value(Value
+            ,[{?ADDITIONALITEMS, _AdditionalItems} | Attrs]
+            ,State
            ) ->
   check_value(Value, Attrs, State);
 %% doesn't really do anything, since this attribute will be handled
@@ -364,6 +374,7 @@ check_value(Value, [_Attr | Attrs], State) ->
 %%  {"type":["string","number"]}
 %% @private
 check_type(Value, Type, State) ->
+  lager:debug("checking type ~p against value ~p", [Type, Value]),
   case is_type_valid(Value, Type) of
     true  -> State;
     false -> wrong_type(Value, State)
@@ -385,26 +396,27 @@ is_type_valid(Value, UnionType) ->
 
 %% @private
 check_union_type(Value, UnionType) ->
-  lists:any( fun(Type) ->
-                 try
-                   case is_json_object(Type) of
-                     true  ->
-                       %% case when there's a schema in the array,
-                       %% then we need to validate against
-                       %% that schema
-                       NewState = new_state(Type, []),
-                       _ = check_value(Value, unwrap(Type), NewState),
-                       true;
-                     false ->
-                       is_type_valid(Value, Type)
-                   end
-                 catch
-                   throw:[{?data_invalid, _, _, _} | _] -> false;
-                   throw:[{?schema_invalid, _, _} | _]  -> false
-                 end
-             end
-           , UnionType
+  lists:any(fun(Type) -> check_union_type_fun(Type, Value) end
+           ,UnionType
            ).
+
+check_union_type_fun(Type, Value) ->
+  try
+    case is_json_object(Type) of
+      true  ->
+        %% case when there's a schema in the array,
+        %% then we need to validate against
+        %% that schema
+        NewState = new_state(Type, []),
+        _ = check_value(Value, unwrap(Type), NewState),
+        true;
+      false ->
+        is_type_valid(Value, Type)
+    end
+  catch
+    throw:[{?data_invalid, _, _, _} | _] -> false;
+    throw:[{?schema_invalid, _, _} | _]  -> false
+  end.
 
 %% @private
 wrong_type(Value, State) ->
@@ -443,7 +455,7 @@ check_properties_fold({PropertyName, PropertySchema}, {CurrentState, Value}) ->
       case get_path(?REQUIRED, PropertySchema) of
         'true' ->
           Error = { ?data_invalid
-                    , get_current_schema(CurrentState)
+                    , wh_json:set_value(<<"property">>, PropertyName, PropertySchema)
                     , ?missing_required_property
                     , Value
                   },
@@ -452,22 +464,43 @@ check_properties_fold({PropertyName, PropertySchema}, {CurrentState, Value}) ->
           {maybe_add_default(PropertyName, get_path(?DEFAULT, PropertySchema), CurrentState), Value}
       end;
     Property ->
-      NewState = set_current_schema( CurrentState
-                                     , PropertySchema
+      lager:debug("checking property ~p against name ~p schema ~p", [Property, PropertyName, PropertySchema]),
+      NewState = set_current_schema(CurrentState
+                                    ,PropertySchema
                                    ),
-      {check_value( Property
-                    , unwrap(PropertySchema)
-                    , NewState
-                  ), Value}
+      case get_strict(NewState) of
+        'false' ->
+          {check_value(Property
+                       ,unwrap(PropertySchema)
+                       ,NewState
+                      )
+           ,Value
+          };
+        'true' ->
+          {check_value({PropertyName, Property}
+                       ,unwrap(PropertySchema)
+                       ,NewState
+                      )
+           ,Value
+          }
+      end
   end.
 
+-spec get_strict(#state{}) -> boolean().
+get_strict(#state{strict=Strict}) -> Strict.
+
 -spec maybe_add_default(binary(), list() | binary(), #state{}) -> #state{}.
-maybe_add_default(_PropertyName, [], CurrentState) ->
-  CurrentState;
+maybe_add_default(_PropertyName, [], State) ->
+  State;
 maybe_add_default(_PropertyName, _DefaultValue, #state{resulting_data='undefined'}=State) ->
   State;
-maybe_add_default(PropertyName, DefaultValue, #state{resulting_data={Data}}=CurrentState) ->
-  CurrentState#state{resulting_data={[{PropertyName, DefaultValue}|Data]}}.
+maybe_add_default(PropertyName, DefaultValue, #state{resulting_data=Data}=State) ->
+  State#state{resulting_data=wh_json:set_value(PropertyName, DefaultValue, Data)}.
+
+add_validated_data(Key, Value, #state{resulting_data='undefined'}=State) ->
+  add_validated_data(Key, Value, State#state{resulting_data=wh_json:from_list([{Key, Value}])});
+add_validated_data(Key, Value, #state{resulting_data=Data}=State) ->
+  State#state{resulting_data=wh_json:set_value(Key, Value, Data)}.
 
 %% @doc 5.3.  patternProperties
 %%
@@ -481,24 +514,23 @@ maybe_add_default(PropertyName, DefaultValue, #state{resulting_data={Data}}=Curr
 %% @private
 check_pattern_properties(Value, PatternProperties, State) ->
   P1P2 = [{P1, P2} || P1 <- unwrap(Value), P2  <- unwrap(PatternProperties)],
-  TmpState = lists:foldl( fun({Property, Pattern}, CurrentState) ->
-                              check_match(Property, Pattern, CurrentState)
-                          end
+  TmpState = lists:foldl( fun check_match/2
                         , State
                         , P1P2
                         ),
   set_current_schema(TmpState, get_current_schema(State)).
 
 %% @private
+check_match({Property, Pattern}, CurrentState) ->
+  check_match(Property, Pattern, CurrentState).
 check_match({PropertyName, PropertyValue}, {Pattern, Schema}, State) ->
-  case re:run(PropertyName, Pattern, [{capture, none}]) of
-    match   ->
-      check_value( PropertyValue
-                 , unwrap(Schema)
-                 , set_current_schema(State, Schema)
-                 );
-    nomatch ->
-      State
+  case re:run(PropertyName, Pattern, [{'capture', 'none'}]) of
+    'nomatch' -> State;
+    'match'   ->
+      check_value(PropertyValue
+                  ,unwrap(Schema)
+                  ,set_current_schema(State, Schema)
+                 )
   end.
 
 %% @doc 5.4.  additionalProperties
@@ -1115,17 +1147,22 @@ new_state(JsonSchema, Options) ->
                                      , 0
                                      ),
 
-  #state{ current_schema  = JsonSchema
-        , original_schema = JsonSchema
-        , allowed_errors  = AllowedErrors
-        , error_list      = []
-        , error_handler   = ErrorHandler
-        , resulting_data  = 'undefined'
+  Strict = props:get_value('strict', Options, 'false'),
+
+  #state{current_schema  = JsonSchema
+         ,original_schema = JsonSchema
+         ,allowed_errors  = AllowedErrors
+         ,error_list      = []
+         ,error_handler   = ErrorHandler
+         ,resulting_data  = 'undefined'
+         ,strict = Strict
         }.
 
 new_state(JsonSchema, Data, Options) ->
-  NewState = new_state(JsonSchema, Options),
-  NewState#state{resulting_data=Data}.
+  case new_state(JsonSchema, Options) of
+    #state{strict='true'}=State -> State#state{resulting_data=wh_json:new()};
+    State -> State#state{resulting_data=Data}
+  end.
 
 %% @private
 get_current_schema(#state{current_schema = CurrentSchema}) ->
