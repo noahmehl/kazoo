@@ -45,7 +45,7 @@ start() ->
 %% @end
 %%--------------------------------------------------------------------
 -spec stop() -> 'ok'.
-stop() -> 
+stop() ->
     exit(whereis('stepswitch_sup'), 'shutdown'),
     'ok'.
 
@@ -60,6 +60,7 @@ start_deps() ->
     whistle_apps_deps:ensure(),
     _ = [wh_util:ensure_started(App) || App <- ['crypto'
                                                 ,'lager'
+                                                ,'kazoo_api'
                                                 ,'whistle_amqp'
                                                 ,'whistle_couch'
                                                ]],
@@ -73,7 +74,7 @@ start_deps() ->
 %%--------------------------------------------------------------------
 -spec declare_exchanges() -> 'ok'.
 declare_exchanges() ->
-    _ = wapi_authn:declare_exchanges(),
+    _ = kapi_authn:declare_exchanges(),
     _ = wapi_call:declare_exchanges(),
     _ = wapi_dialplan:declare_exchanges(),
     _ = wapi_offnet_resource:declare_exchanges(),

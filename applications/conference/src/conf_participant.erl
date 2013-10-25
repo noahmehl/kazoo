@@ -194,8 +194,8 @@ handle_conference_error(JObj, Props) ->
     end.
 
 -spec handle_authn_req(wh_json:object(), wh_proplist()) -> 'ok'.
-handle_authn_req(JObj, Props) ->
-    'true' = wapi_authn:req_v(JObj),
+handle_authn_req(APIJObj, Props) ->
+    {'ok', JObj} = kapi_authn:req_v(APIJObj),
     BridgeRequest = props:get_value('bridge_request', Props),
     case wh_json:get_value(<<"Method">>, JObj) =:= <<"INVITE">>
         andalso binary:split(wh_json:get_value(<<"To">>, JObj), <<"@">>) of
@@ -645,18 +645,23 @@ publish_route_response(ControllerQ, MsgId, ServerId, AccountId) ->
 -spec send_authn_response/4 :: (api_binary(), ne_binary(), whapps_conference:conference(), whapps_call:call()) -> 'ok'.
 send_authn_response(MsgId, ServerId, Conference, Call) ->
     lager:debug("sending authn response for participant invite from local server"),
-    CCVs = [{<<"Username">>, whapps_conference:bridge_username(Conference)}
-            ,{<<"Account-ID">>, whapps_call:account_db(Call)}
-            ,{<<"Authorizing-Type">>, <<"conference">>}
-            ,{<<"Inception">>, <<"on-net">>}
-            ,{<<"Authorizing-ID">>, whapps_conference:id(Conference)}
-           ],
-    Resp = [{<<"Msg-ID">>, MsgId}
-            ,{<<"Auth-Password">>, whapps_conference:bridge_password(Conference)}
-            ,{<<"Auth-Method">>, <<"password">>}
-            ,{<<"Custom-Channel-Vars">>, wh_json:from_list(props:filter_undefined(CCVs))}
-            | wh_api:default_headers(?APP_NAME, ?APP_VERSION)],
-    wapi_authn:publish_resp(ServerId, Resp).
+    CCVs =
+        props:filter_undefined(
+          [{<<"Username">>, whapps_conference:bridge_username(Conference)}
+           ,{<<"Account-ID">>, whapps_call:account_db(Call)}
+           ,{<<"Authorizing-Type">>, <<"conference">>}
+           ,{<<"Inception">>, <<"on-net">>}
+           ,{<<"Authorizing-ID">>, whapps_conference:id(Conference)}
+          ]),
+    Resp =
+        props:filter_undefined(
+          [{<<"Msg-ID">>, MsgId}
+           ,{<<"Auth-Password">>, whapps_conference:bridge_password(Conference)}
+           ,{<<"Auth-Method">>, <<"password">>}
+           ,{<<"Custom-Channel-Vars">>, wh_json:from_list(CCVs)}
+           | wh_api:default_headers(?APP_NAME, ?APP_VERSION)
+          ]),
+    kapi_authn:publish_resp(ServerId, Resp).
 
 -spec send_conference_command(whapps_conference:conference(), whapps_call:call()) -> 'ok'.
 send_conference_command(Conference, Call) ->

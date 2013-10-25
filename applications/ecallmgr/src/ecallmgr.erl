@@ -58,6 +58,7 @@ start_deps() ->
     _ = [wh_util:ensure_started(App) || App <- ['crypto'
                                                 ,'lager'
                                                 ,'whistle_amqp'
+                                                ,'kazoo_api'
                                                 ,'gproc'
                                                 ,'ibrowse'
                                                 ,'whistle_stats'
@@ -72,7 +73,7 @@ start_deps() ->
 %%--------------------------------------------------------------------
 -spec declare_exchanges() -> 'ok'.
 declare_exchanges() ->
-    _ = wapi_authn:declare_exchanges(),
+    _ = kapi_authn:declare_exchanges(),
     _ = wapi_authz:declare_exchanges(),
     _ = wapi_call:declare_exchanges(),
     _ = wapi_conference:declare_exchanges(),

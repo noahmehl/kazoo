@@ -1,7 +1,7 @@
 %%%-------------------------------------------------------------------
-%%% @copyright (C) 2011-2012 VoIP, INC
+%%% @copyright (C) 2011-2013 2600Hz, INC
 %%% @doc
-%%% Its a party and your invite'd...
+%%% It is a party and your invite'd...
 %%% @end
 %%% @contributors
 %%%   Karl Anderson
@@ -59,6 +59,7 @@ start_deps() ->
     whistle_apps_deps:ensure(?MODULE), % if started by the whistle_controller, this will exist
     _ = [wh_util:ensure_started(App) || App <- ['crypto'
                                                 ,'lager'
+                                                ,'kazoo_api'
                                                 ,'whistle_amqp'
                                                 ,'whistle_couch'
                                                ]],
@@ -72,10 +73,10 @@ start_deps() ->
 %%--------------------------------------------------------------------
 -spec declare_exchanges() -> 'ok'.
 declare_exchanges() ->
-    _ = wapi_authn:declare_exchanges(),    
+    _ = kapi_authn:declare_exchanges(),
     _ = wapi_conference:declare_exchanges(),
     _ = wapi_route:declare_exchanges(),
     _ = wapi_call:declare_exchanges(),
     _ = wapi_dialplan:declare_exchanges(),
-    _ = wapi_notifications:declare_exchanges(), 
+    _ = wapi_notifications:declare_exchanges(),
     wapi_self:declare_exchanges().

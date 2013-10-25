@@ -646,8 +646,8 @@ query_authn(#registration{username=Username
           ],
     ReqResp = wh_amqp_worker:call(?ECALLMGR_AMQP_POOL
                                   ,props:filter_undefined(Req)
-                                  ,fun wapi_authn:publish_req/1
-                                  ,fun wapi_authn:resp_v/1
+                                  ,fun kapi_authn:publish_req/1
+                                  ,fun kapi_authn:resp_v/1
                                  ),
     case ReqResp of
         {'error', _} -> Reg;

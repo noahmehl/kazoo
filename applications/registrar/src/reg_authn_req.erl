@@ -15,11 +15,11 @@
 init() -> 'ok'.
 
 -spec handle_req(wh_json:object(), wh_proplist()) -> 'ok'.
-handle_req(JObj, _Props) ->
-    'true' = wapi_authn:req_v(JObj),
+handle_req(APIJObj, _Props) ->
+    {'ok', JObj} = kapi_authn:req_v(APIJObj),
     _ = wh_util:put_callid(JObj),
-    Username = wapi_authn:get_auth_user(JObj),
-    Realm = wapi_authn:get_auth_realm(JObj),
+    Username = kapi_authn:get_auth_user(JObj),
+    Realm = kapi_authn:get_auth_realm(JObj),
     lager:debug("trying to authenticate ~s@~s", [Username, Realm]),
     case lookup_auth_user(Username, Realm) of
         {'ok', #auth_user{}=AuthUser} ->
@@ -40,18 +40,17 @@ handle_req(JObj, _Props) ->
 -spec send_auth_resp(auth_user(), wh_json:object()) -> 'ok'.
 send_auth_resp(#auth_user{password=Password
                           ,method=Method
-                          ,suppress_unregister_notifications=SupressUnregister
+                          ,suppress_unregister_notifications=SuppressUnregister
                          }=AuthUser, JObj) ->
-    Category = wh_json:get_value(<<"Event-Category">>, JObj),
     Resp = [{<<"Msg-ID">>, wh_json:get_value(<<"Msg-ID">>, JObj)}
             ,{<<"Auth-Password">>, Password}
             ,{<<"Auth-Method">>, Method}
-            ,{<<"Suppress-Unregister-Notifications">>, SupressUnregister}
+            ,{<<"Suppress-Unregister-Notifications">>, SuppressUnregister}
             ,{<<"Custom-Channel-Vars">>, create_ccvs(AuthUser)}
-            | wh_api:default_headers(Category, <<"authn_resp">>, ?APP_NAME, ?APP_VERSION)
+            | wh_api:default_headers(?APP_NAME, ?APP_VERSION)
            ],
     lager:debug("sending SIP authentication reply, with credentials"),
-    wapi_authn:publish_resp(wh_json:get_value(<<"Server-ID">>, JObj), Resp).
+    kapi_authn:publish_resp(wh_json:get_value(<<"Server-ID">>, JObj), Resp).
 
 %%-----------------------------------------------------------------------------
 %% @private
@@ -68,11 +67,11 @@ send_auth_error(JObj) ->
 %%   Defer-Response we can use that flag on registrar errors
 %%   to queue in Kazoo but still advance Kamailio.
     Resp = [{<<"Msg-ID">>, wh_json:get_value(<<"Msg-ID">>, JObj)}
-            ,{<<"Defer-Response">>, <<"true">>}
+            ,{<<"Defer-Response">>, 'true'}
             | wh_api:default_headers(?APP_NAME, ?APP_VERSION)
            ],
     lager:debug("sending SIP authentication error"),
-    wapi_authn:publish_error(wh_json:get_value(<<"Server-ID">>, JObj), Resp).
+    kapi_authn:publish_error(wh_json:get_value(<<"Server-ID">>, JObj), Resp).
 
 %%-----------------------------------------------------------------------------
 %% @private
@@ -81,13 +80,19 @@ send_auth_error(JObj) ->
 %% @end
 %%-----------------------------------------------------------------------------
 -spec create_ccvs(auth_user()) -> wh_json:object().
-create_ccvs(#auth_user{}=AuthUser) ->
-    Props = [{<<"Username">>, AuthUser#auth_user.username}
-             ,{<<"Realm">>, AuthUser#auth_user.realm}
-             ,{<<"Account-ID">>, AuthUser#auth_user.account_id}
-             ,{<<"Authorizing-ID">>, AuthUser#auth_user.authorizing_id}
-             ,{<<"Authorizing-Type">>, AuthUser#auth_user.authorizing_type}
-             ,{<<"Owner-ID">>, AuthUser#auth_user.owner_id}
+create_ccvs(#auth_user{username=Username
+                       ,realm=Realm
+                       ,account_id=AccountId
+                       ,authorizing_id=AuthorizingId
+                       ,authorizing_type=AuthorizingType
+                       ,owner_id=OwnerId
+                      }) ->
+    Props = [{<<"Username">>, Username}
+             ,{<<"Realm">>, Realm}
+             ,{<<"Account-ID">>, AccountId}
+             ,{<<"Authorizing-ID">>, AuthorizingId}
+             ,{<<"Authorizing-Type">>, AuthorizingType}
+             ,{<<"Owner-ID">>, OwnerId}
              ,{<<"Inception">>, <<"on-net">>}
             ],
     wh_json:from_list(props:filter_undefined(Props)).

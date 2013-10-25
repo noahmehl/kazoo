@@ -233,8 +233,8 @@ query_registrar(Realm, Username, Node, Id, Method, Props) ->
           ],
     ReqResp = wh_amqp_worker:call(?ECALLMGR_AMQP_POOL
                                   ,props:filter_undefined(Req)
-                                  ,fun wapi_authn:publish_req/1
-                                  ,fun wapi_authn:resp_v/1
+                                  ,fun kapi_authn:publish_req/1
+                                  ,fun kapi_authn:resp_v/1
                                  ),
     case ReqResp of
         {'error', _}=E -> E;
@@ -246,20 +246,21 @@ query_registrar(Realm, Username, Node, Id, Method, Props) ->
 %%   to wait for conferences, ect.  Since Kamailio does not honor
 %%   Defer-Response we can use that flag on registrar errors
 %%   to queue in Kazoo but still advance Kamailio, just need to check here.
--spec maybe_defered_error(ne_binary(), ne_binary(), wh_json:object()) -> {'ok', wh_json:object()} | {'error', 'timeout'}.
+-spec maybe_defered_error(ne_binary(), ne_binary(), wh_json:object()) ->
+                                 {'ok', wh_json:object()} |
+                                 {'error', 'timeout'}.
 maybe_defered_error(Realm, Username, JObj) ->
-    case wapi_authn:resp_v(JObj) of
-        'false' -> {'error', 'timeout'};
-        'true' ->
+    case kapi_authn:resp_v(JObj) of
+        {'error', _} -> {'error', 'timeout'};
+        {'ok', FixedJObj} ->
             lager:debug("received authn information"),
             AccountId = wh_json:get_value([<<"Custom-Channel-Vars">>, <<"Account-ID">>], JObj),
             AccountDb = wh_util:format_account_id(AccountId, 'encoded'),
-            AuthorizingId = wh_json:get_value([<<"Custom-Channel-Vars">>, <<"Authorizing-ID">>], JObj),
+            AuthorizingId = wh_json:get_value([<<"Custom-Channel-Vars">>, <<"Authorizing-ID">>], FixedJObj),
             CacheProps = [{'origin', [{'db', AccountDb, AuthorizingId}
                                       ,{'db', AccountDb, AccountId}
                                      ]}
                          ],
             wh_cache:store_local(?ECALLMGR_AUTH_CACHE, ?CREDS_KEY(Realm, Username), JObj, CacheProps),
-            {'ok', JObj}
+            {'ok', FixedJObj}
     end.
-
