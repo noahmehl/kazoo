@@ -1,8 +1,8 @@
 {
   "_id":"authn_req"
   ,"$schema":"http://json-schema.org/draft-04/schema#"
-  ,"description":"Call Authentication Request"
-  ,"title":"Call Authentication Request"
+  ,"description":"SIP Authentication Request"
+  ,"title":"SIP Authentication Request"
   ,"properties":{
      "Event-Category":{
        "type":"string"

@@ -1,0 +1,41 @@
+{
+  "_id":"authn_resp"
+  ,"$schema":"http://json-schema.org/draft-04/schema#"
+  ,"description":"SIP Authentication Response"
+  ,"title":"SIP Authentication Response"
+  ,"properties":{
+     "Event-Category":{
+       "type":"string"
+       ,"enum":["directory"]
+       ,"default":"directory"
+      }
+     ,"Event-Name":{
+        "type":"string"
+        ,"enum":["authn_resp"]
+        ,"default":"authn_resp"
+       }
+     ,"Auth-Method":{
+        "description":"Authentication method to use"
+        ,"required":true
+        ,"type":"string"
+        ,"enum":["password", "ip", "a1-hash", "error"]
+       }
+     ,"Auth-Password":{
+        "description":"Password/IP/A1-hash for the SIP user"
+        ,"required":true
+        ,"type":"string"
+       }
+     ,"Custom-Channel-Vars":{
+        "description":"Variables to set on the channel"
+        ,"type":"object"
+       }
+     ,"Auth-Username":{
+        "description":"Authentication Username"
+        ,"type":"string"
+       }
+     ,"Suppress-Unregister-Notifications":{
+        "description":"Should the registration expiration be suppressed"
+        ,"type":"boolean"
+       }
+    }
+}

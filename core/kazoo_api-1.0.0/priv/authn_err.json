@@ -1,0 +1,23 @@
+{
+  "_id":"authn_err"
+  ,"$schema":"http://json-schema.org/draft-04/schema#"
+  ,"description":"SIP Authentication Error"
+  ,"title":"SIP Authentication Error"
+  ,"properties":{
+     "Event-Category":{
+       "type":"string"
+       ,"enum":["directory"]
+       ,"default":"directory"
+      }
+     ,"Event-Name":{
+        "type":"string"
+        ,"enum":["authn_err"]
+        ,"default":"authn_err"
+       }
+    }
+    ,"Defer-Response":{
+        "type":"boolean"
+        ,"default":true
+        ,"description":"Use this response as a last resort"
+    }
+}
