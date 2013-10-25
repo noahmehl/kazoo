@@ -372,22 +372,22 @@ check_value(Value, [_Attr | Attrs], State) ->
 %% @private
 check_type(Value, Type, State) ->
   case is_type_valid(Value, Type) of
-    true  -> State;
-    false -> wrong_type(Value, State)
+    'true'  -> State;
+    'false' -> wrong_type(Value, State)
   end.
 
 is_type_valid(Value, ?STRING)   -> is_binary(Value);
 is_type_valid(Value, ?NUMBER)   -> is_number(Value);
 is_type_valid(Value, ?INTEGER)  -> is_integer(Value);
-is_type_valid(Value, ?BOOLEAN)  -> is_boolean(Value);
+is_type_valid(Value, ?BOOLEAN)  -> wh_util:is_boolean(Value);
 is_type_valid(Value, ?OBJECT)   -> is_json_object(Value);
 is_type_valid(Value, ?ARRAY)    -> is_array(Value);
 is_type_valid(Value, ?NULL)     -> is_null(Value);
-is_type_valid(_Value, ?ANY)     -> true;
+is_type_valid(_Value, ?ANY)     -> 'true';
 is_type_valid(Value, UnionType) ->
   case is_array(UnionType) of
-    true  -> check_union_type(Value, UnionType);
-    false -> true
+    'true'  -> check_union_type(Value, UnionType);
+    'false' -> 'true'
   end.
 
 %% @private
