@@ -15,11 +15,12 @@
 
 -include("kazoo_api.hrl").
 
+-spec build_message(wh_json:object()) -> {'ok', iolist()}.
 build_message(JObj) ->
-    wh_json:encode(JObj).
+    {'ok', wh_json:encode(JObj)}.
 
 find_schema(SchemaName) ->
-    case wh_cache:fetch(SchemaName) of
+    case wh_cache:fetch_local(?API_CACHE, SchemaName) of
         {'ok', _Schema}=OK -> OK;
         {'error', 'not_found'} ->
             case code:priv_dir('kazoo_api') of
@@ -42,7 +43,7 @@ import_schema(Path) ->
         Schema ->
             MergedSchema = merge_defaults(Schema),
             lager:debug("caching ~s", [SchemaName]),
-            wh_cache:store(SchemaName, MergedSchema),
+            wh_cache:store_local(?API_CACHE, SchemaName, MergedSchema),
             {'ok', MergedSchema}
     catch
         _E:_R ->
