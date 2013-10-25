@@ -3,6 +3,8 @@
   ,"$schema":"http://json-schema.org/draft-04/schema#"
   ,"description":"SIP Authentication Request"
   ,"title":"SIP Authentication Request"
+  ,"exchange":"callmgr"
+  ,"routing_key":"authn.req.{Auth-Realm}"
   ,"properties":{
      "Event-Category":{
        "type":"string"

@@ -3,6 +3,8 @@
   ,"$schema":"http://json-schema.org/draft-04/schema#"
   ,"description":"SIP Authentication Response"
   ,"title":"SIP Authentication Response"
+  ,"exchange":"targeted"
+  ,"routing_key":"{Server-ID}"
   ,"properties":{
      "Event-Category":{
        "type":"string"

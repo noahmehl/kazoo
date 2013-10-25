@@ -3,6 +3,8 @@
   ,"$schema":"http://json-schema.org/draft-04/schema#"
   ,"description":"SIP Authentication Error"
   ,"title":"SIP Authentication Error"
+  ,"exchange":"targeted"
+  ,"routing_key":"{Server-ID}"
   ,"properties":{
      "Event-Category":{
        "type":"string"
