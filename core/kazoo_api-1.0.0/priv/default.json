@@ -1,0 +1,41 @@
+{
+  "_id":"default"
+  ,"$schema":"http://json-schema.org/draft-04/schema#"
+  ,"description":"Default Headers All Messages must include"
+  ,"title":"Default Headers"
+  ,"properties":{
+     "Server-ID":{
+       "type":"string"
+       ,"description":"AMQP Response queue on the 'targeted' exchange"
+      }
+      ,"App-Name":{
+        "type":"string"
+        ,"description":"Application name of the sender"
+        ,"required":true
+      }
+      ,"App-Version":{
+          "type":"string"
+          ,"description":"Application version of the sender"
+          ,"required":true
+      }
+      ,"Node":{
+          "type":"string"
+          ,"description":"Node of the sender"
+          ,"required":true
+      }
+      ,"Event-Category":{
+          "type":"string"
+          ,"description":"Category in which the event belongs"
+          ,"required":true
+      }
+      ,"Event-Name":{
+          "type":"string"
+          ,"description":"Name of the event being sent"
+          ,"required":true
+      }
+      ,"Msg-ID":{
+          "type":"string"
+          ,"description":"Unique ID of the request or response"
+          ,"required":true
+      }
+}
