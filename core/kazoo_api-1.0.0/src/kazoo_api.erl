@@ -24,7 +24,9 @@
 -spec start_link() -> startlink_ret().
 start_link() ->
     _ = start_deps(),
-    kz_api:init_schemas().
+    SupReturn = kazoo_api_sup:start_link(),
+    kz_api:init_schemas(),
+    SupReturn.
 
 -spec start() -> 'ok' | {'error', _}.
 start() ->

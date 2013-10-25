@@ -4,6 +4,14 @@
 -include_lib("whistle/include/wh_types.hrl").
 -include_lib("whistle/include/wh_log.hrl").
 
+-define(API_CACHE, 'kazoo_api_cache').
+
+-type api_builder_resp() :: {'ok', iolist()} |
+                            {'error', _}.
+-type api_validator_resp() :: {'ok', wh_json:object()} |
+                              {'error', _}.
+
+-define(DEFAULT_CONTENT_TYPE, <<"application/json">>).
 
 -define(SERVER_ID_SCHEMA, wh_json:from_list([{<<"description">>, <<"AMQP Response Queue on the 'targeted' exchange">>}
                                              ,{<<"type">>, <<"string">>}
