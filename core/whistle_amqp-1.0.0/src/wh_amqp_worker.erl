@@ -239,7 +239,16 @@ collect_from_whapp_or_validate(Whapp, VFun) ->
     lager:debug("attempting to collect ~p responses from ~s or the first valid", [Count, Whapp]),
     fun([Response|_]=Responses) ->
             length(Responses) >= Count
-                orelse VFun(Response)
+                orelse apply_vfun(VFun, Response)
+    end.
+
+-spec apply_vfun(validate_fun(), wh_json:object()) -> boolean().
+apply_vfun(VFun, Response) ->
+    case VFun(Response) of
+        'true' -> 'true';
+        'false' -> 'false';
+        {'ok', _} -> 'true';
+        {'error', _} -> 'false'
     end.
 
 -spec handle_resp(wh_json:object(), wh_proplist()) -> 'ok'.
@@ -386,7 +395,7 @@ handle_cast({'event', MsgId, JObj}, #state{current_msg_id = MsgId
                                            ,neg_resp_threshold = NegThreshold
                                           }=State) when NegCount < NegThreshold ->
     _ = wh_util:put_callid(JObj),
-    case VFun(JObj) of
+    case apply_vfun(VFun, JObj) of
         'true' ->
             case wh_json:is_true(<<"Defer-Response">>, JObj) of
                 'false' ->
