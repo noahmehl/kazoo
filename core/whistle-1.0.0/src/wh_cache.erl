@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @copyright (C) 2011-2012, VoIP INC
+%%% @copyright (C) 2011-2013, 2600Hz INC
 %%% @doc
 %%% Simple cache server
 %%% @end
@@ -54,7 +54,7 @@
 
 -define(NOTIFY_KEY(Key), {'monitor_key', Key}).
 
--define(BINDINGS, [{self, []}]).
+-define(BINDINGS, [{'self', []}]).
 -define(RESPONDERS, [{{?MODULE, 'handle_document_change'}
                       ,[{<<"configuration">>, <<"*">>}]
                      }]).
@@ -109,7 +109,7 @@ start_link(Name, ExpirePeriod, Props) ->
     case props:get_value('origin_bindings', Props) of
         'undefined' ->
             lager:debug("started new cache process (gen_server): ~s", [Name]),
-            gen_server:start_link({local, Name}, ?MODULE, [Name, ExpirePeriod, Props], []);
+            gen_server:start_link({'local', Name}, ?MODULE, [Name, ExpirePeriod, Props], []);
         BindingProps ->
             lager:debug("started new cache process (gen_listener): ~s", [Name]),
             Bindings = [{'conf', P} || P <- BindingProps],
