@@ -661,7 +661,7 @@ start_amqp(Props) ->
     end.
 
 -spec set_qos('undefined' | non_neg_integer()) -> 'ok'.
-set_qos('undefined') -> ok;
+set_qos('undefined') -> 'ok';
 set_qos(N) when is_integer(N) -> amqp_util:basic_qos(N).
 
 -spec start_consumer(ne_binary(), wh_proplist()) -> 'ok'.
@@ -675,7 +675,17 @@ remove_binding(Binding, Props, Q) ->
         Return -> Return
     catch
         'error':'undef' ->
-            erlang:error({'api_module_undefined', Wapi})
+            remove_kapi_binding(Binding, Props, Q)
+    end.
+
+-spec remove_kapi_binding(ne_binary(), wh_proplist(), ne_binary()) -> any().
+remove_kapi_binding(Binding, Props, Q) ->
+    Kapi = list_to_binary([<<"kapi_">>, wh_util:to_binary(Binding)]),
+    try (wh_util:to_atom(Kapi, 'true')):unbind_q(Q, Props) of
+        Return -> Return
+    catch
+        'error':'undef' ->
+            erlang:error({'api_module_undefined', Kapi})
     end.
 
 -spec create_binding(ne_binary(), wh_proplist(), ne_binary()) -> any().
@@ -687,7 +697,19 @@ create_binding(Binding, Props, Q) ->
         Return -> Return
     catch
         'error':'undef' ->
-            erlang:error({'api_module_undefined', Wapi})
+            create_kapi_binding(Binding, Props, Q)
+    end.
+
+-spec create_kapi_binding(ne_binary(), wh_proplist(), ne_binary()) -> any().
+create_kapi_binding(Binding, Props, Q) when not is_binary(Binding) ->
+    create_kapi_binding(wh_util:to_binary(Binding), Props, Q);
+create_kapi_binding(Binding, Props, Q) ->
+    Kapi = list_to_binary([<<"kapi_">>, wh_util:to_binary(Binding)]),
+    try (wh_util:to_atom(Kapi, 'true')):bind_q(Q, Props) of
+        Return -> Return
+    catch
+        'error':'undef' ->
+            erlang:error({'api_module_undefined', Kapi})
     end.
 
 -spec next_timeout(pos_integer()) -> ?START_TIMEOUT..?MAX_TIMEOUT.
