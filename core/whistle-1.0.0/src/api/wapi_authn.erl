@@ -19,7 +19,6 @@
          ,publish_resp/2, publish_resp/3
          ,publish_error/2, publish_error/3
          ,get_auth_user/1, get_auth_realm/1
-         ,req_event_type/0
         ]).
 
 -include_lib("whistle/include/wh_api.hrl").
@@ -33,7 +32,7 @@
                             ,<<"Auth-User">>, <<"Auth-Realm">>
                            ]).
 -define(OPTIONAL_AUTHN_REQ_HEADERS, [<<"Method">>, <<"Switch-Hostname">>
-                                         ,<<"Orig-IP">>, <<"Call-ID">>
+                                     ,<<"Orig-IP">>, <<"Call-ID">>
                                     ]).
 -define(AUTHN_REQ_VALUES, [{<<"Event-Category">>, ?EVENT_CATEGORY}
                            ,{<<"Event-Name">>, ?AUTHN_REQ_EVENT_NAME}
@@ -88,10 +87,6 @@ req_v(Prop) when is_list(Prop) ->
     wh_api:validate(Prop, ?AUTHN_REQ_HEADERS, ?AUTHN_REQ_VALUES, ?AUTHN_REQ_TYPES);
 req_v(JObj) ->
     req_v(wh_json:to_proplist(JObj)).
-
--spec req_event_type() -> {ne_binary(), ne_binary()}.
-req_event_type() ->
-    {?EVENT_CATEGORY, ?AUTHN_REQ_EVENT_NAME}.
 
 %%--------------------------------------------------------------------
 %% @doc Authentication Response - see wiki
@@ -201,7 +196,7 @@ get_authn_req_routing(Req) ->
 %% @end
 %%-----------------------------------------------------------------------------
 -spec get_auth_user(wh_json:object()) -> api_binary().
-get_auth_user(ApiJObj) -> 
+get_auth_user(ApiJObj) ->
     case wh_json:get_value(<<"Auth-User">>, ApiJObj) of
         'undefined' -> 'undefined';
          Username -> wh_util:to_lower_binary(Username)
@@ -217,8 +212,8 @@ get_auth_user(ApiJObj) ->
 -spec get_auth_realm(wh_json:object() | wh_proplist()) -> ne_binary().
 get_auth_realm(ApiProp) when is_list(ApiProp) ->
     AuthRealm = props:get_value(<<"Auth-Realm">>, ApiProp, <<"missing.realm">>),
-    case wh_network_utils:is_ipv4(AuthRealm) 
-        orelse wh_network_utils:is_ipv6(AuthRealm) 
+    case wh_network_utils:is_ipv4(AuthRealm)
+        orelse wh_network_utils:is_ipv6(AuthRealm)
     of
         'false' -> wh_util:to_lower_binary(AuthRealm);
         'true' ->
