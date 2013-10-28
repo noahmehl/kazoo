@@ -1,12 +1,12 @@
 %%%-------------------------------------------------------------------
-%%% @copyright (C) 2011-2012, VoIP INC
+%%% @copyright (C) 2011-2013, 2600Hz INC
 %%% @doc
 %%% For gen_listeners that bind to targeted for direct messaging
 %%% @end
 %%% @contributors
 %%%   James Aimonetti
 %%%-------------------------------------------------------------------
--module(wapi_self).
+-module(kapi_self).
 
 -export([bind_q/2, unbind_q/2]).
 -export([declare_exchanges/0]).
