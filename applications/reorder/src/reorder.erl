@@ -43,7 +43,7 @@ start() ->
 %% @end
 %%--------------------------------------------------------------------
 -spec stop() -> 'ok'.
-stop() -> 
+stop() ->
     exit(whereis('reorder_sup'), 'shutdown'),
     'ok'.
 
@@ -72,5 +72,4 @@ start_deps() ->
 -spec declare_exchanges() -> 'ok'.
 declare_exchanges() ->
     _ = wapi_route:declare_exchanges(),
-    _ = kapi_self:declare_exchanges(),
     kapi_self:declare_exchanges().

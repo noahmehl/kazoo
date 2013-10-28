@@ -74,5 +74,4 @@ declare_exchanges() ->
     _ = wapi_dialplan:declare_exchanges(),
     _ = wapi_resource:declare_exchanges(),
     _ = wapi_route:declare_exchanges(),
-    _ = kapi_self:declare_exchanges(),
     kapi_self:declare_exchanges().
