@@ -76,7 +76,7 @@ start_deps() ->
 -spec declare_exchanges() -> 'ok'.
 declare_exchanges() ->
     _ = wapi_call:declare_exchanges(),
-    wapi_self:declare_exchanges().
+    kapi_self:declare_exchanges().
 
 
 add_binding_to_q(Q, _Props) ->

@@ -76,4 +76,4 @@ start_deps() ->
 declare_exchanges() ->
     _ = kapi_authn:declare_exchanges(),
     _ = wapi_route:declare_exchanges(),
-    wapi_self:declare_exchanges().
+    kapi_self:declare_exchanges().

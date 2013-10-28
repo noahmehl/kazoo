@@ -60,7 +60,7 @@ payloads sent directly to our queue, one would configure the bindings list like:
 #+end_src
 
 These two 2-tuples will cause the gen_listener to call wapi_route:bind_q/2 and
-wapi_self:bind_q/2 with the listener's queue. When shutting down the listener,
+kapi_self:bind_q/2 with the listener's queue. When shutting down the listener,
 the unbind_q/2 variants will be called to cleanup the AMQP bindings.
 
 Some of the wapi modules allow parameters to be passed in the second element of

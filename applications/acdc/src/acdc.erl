@@ -82,4 +82,4 @@ declare_exchanges() ->
     _ = wapi_notifications:declare_exchanges(),
     _ = wapi_resource:declare_exchanges(),
     _ = wapi_route:declare_exchanges(),
-    wapi_self:declare_exchanges().
+    kapi_self:declare_exchanges().

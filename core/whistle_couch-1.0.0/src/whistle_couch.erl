@@ -76,4 +76,4 @@ start_deps() ->
 -spec declare_exchanges() -> 'ok'.
 declare_exchanges() ->
     _ = wapi_conf:declare_exchanges(),
-    wapi_self:declare_exchanges().
+    kapi_self:declare_exchanges().

@@ -74,4 +74,4 @@ start_deps() ->
 declare_exchanges() ->
     _ = wapi_notifications:declare_exchanges(),
     _ = wapi_registration:declare_exchanges(),
-    wapi_self:declare_exchanges().
+    kapi_self:declare_exchanges().

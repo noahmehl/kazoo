@@ -148,7 +148,7 @@ notify_expire(Pid) ->
 
 -spec handle_advertise(wh_json:object(), wh_proplist()) -> 'ok'.
 handle_advertise(JObj, Props) ->
-    'true' = wapi_nodes:advertise_v(JObj),
+    'true' = kapi_nodes:advertise_v(JObj),
     Srv = props:get_value('server', Props),
     gen_server:cast(Srv, {'advertise', JObj}).
 
@@ -169,7 +169,7 @@ handle_advertise(JObj, Props) ->
 %%--------------------------------------------------------------------
 init([]) ->
     wapi_nodes:declare_exchanges(),
-    wapi_self:declare_exchanges(),
+    kapi_self:declare_exchanges(),
     Tab = ets:new(?MODULE, ['set', 'protected', 'named_table', {'keypos', #node.node}]),
     _ = erlang:send_after(?EXPIRE_PERIOD, self(), 'expire_nodes'),
     {'ok', #state{tab=Tab}}.
