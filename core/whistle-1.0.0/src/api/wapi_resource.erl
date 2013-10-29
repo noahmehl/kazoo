@@ -85,9 +85,6 @@
                                         ]).
 -define(ORIGINATE_REQ_VALUES, [{<<"Event-Category">>, <<"resource">>}
                                ,{<<"Event-Name">>, <<"originate_req">>}
-                               ,{<<"Dial-Endpoint-Method">>, [<<"single">>, <<"simultaneous">>]}
-                               ,{<<"Media">>, [<<"process">>, <<"bypass">>, <<"auto">>]}
-                               ,{<<"Continue-On-Fail">>, [<<"true">>, <<"false">>]}
                                ,{<<"Application-Name">>, [<<"park">>, <<"bridge">>, <<"transfer">>
                                                           ,<<"fax">>, <<"eavesdrop">>
                                                          ]}
