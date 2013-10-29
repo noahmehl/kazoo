@@ -1,0 +1,77 @@
+{
+    "_id":"originate_req"
+    ,"$schema":"http://json-schema.org/draft-04/schema#"
+    ,"description":"Origination Request - For raw control of the endpoints"
+    ,"title":"Origination Request"
+    ,"exchange":"callmgr"
+    ,"routing_key":"originate.resource.req"
+    ,"allOf":[
+        {"$ref":"bridge_req"}
+        ,{"properties":{
+              "Event-Category":{
+                  "type":"string"
+                  ,"enum":["resource"]
+                  ,"default":"resource"
+              }
+              ,"Event-Name":{
+                  "type":"string"
+                  ,"enum":["originate_req"]
+                  ,"default":"originate_req"
+              }
+              ,"Application-Name":{
+                  "type":"string"
+                  ,"enum":["park", "bridge", "transfer", "fax", "eavesdrop"]
+                  ,"default":"park"
+                  ,"description":"What to do with the channel once it is answered"
+              }
+              ,"Endpoints":{
+                  "type":"array"
+                  ,"description":"The list of endpoints to originate to"
+                  ,"items":{
+                      "type":"object"
+                  }
+                  ,"required":true
+              }
+              ,"SIP-Headers":{
+                  "type":"object"
+                  ,"description":"Option list of SIP headers to set on the outgoing SIP payload"
+              }
+              ,"Custom-Channel-Vars":{
+                  "type":"object"
+                  ,"description":"Option list of channel variables to set on the outgoind channel"
+              }
+              ,"Originate-Immediately":{
+                  "type":"boolean"
+                  ,"description":"Skip the originate resp/execute pahse"
+              }
+              ,"Export-Custom-Channel-Vars":{
+                  "type":"array"
+                  ,"description":"List of channel variable names to export to the other leg"
+                  ,"items":{
+                      "type":"string"
+                  }
+              }
+              ,"Outbound-Call-ID":{
+                  "type":"string"
+                  ,"description":"Set the outbound call-id (instead of having it generated)"
+              }
+              ,"Existing-Call-ID":{
+                  "type":"string"
+                  ,"description":"Use this call-id to determine the media switch to use for the outbound leg"
+              }
+              ,"Fax-Identity-Number":{
+                  "type":"string"
+                  ,"description":"The telephone number to be used within the FAX exchange"
+              }
+              ,"Fax-Identity-Name":{
+                  "type":"string"
+                  ,"description":"If set, a header line will be inserted at the start of each page"
+              }
+              ,"Eavesdrop-Group-ID":{
+                  "type":"string"
+                  ,"description":"Limit the channels that can eavesdrop on this channel to those with the group id"
+              }
+          }
+         }
+    ]
+}
