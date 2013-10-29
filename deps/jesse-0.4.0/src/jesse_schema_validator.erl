@@ -1069,8 +1069,12 @@ check_allof(_Value, [], State) ->
   handle_error(Error, State);
 check_allof(Value, Schemas, State) ->
   lists:foldl(fun(Schema, StateAcc) ->
-                  lager:debug("check all of ~p", [Schema]),
-                  check_value(Value, unwrap(Schema), State)
+                  case has_errors(StateAcc) of
+                    'true' -> StateAcc;
+                    'false' ->
+                      lager:debug("check all of ~p", [Schema]),
+                      check_value(Value, unwrap(Schema), State)
+                  end
               end, State, Schemas).
 
 %% @private
