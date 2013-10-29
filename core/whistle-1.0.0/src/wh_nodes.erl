@@ -148,7 +148,7 @@ notify_expire(Pid) ->
 
 -spec handle_advertise(wh_json:object(), wh_proplist()) -> 'ok'.
 handle_advertise(JObj, Props) ->
-    'true' = kapi_nodes:advertise_v(JObj),
+    'true' = wapi_nodes:advertise_v(JObj),
     Srv = props:get_value('server', Props),
     gen_server:cast(Srv, {'advertise', JObj}).
 
