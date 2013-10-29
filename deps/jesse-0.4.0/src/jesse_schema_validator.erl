@@ -56,6 +56,7 @@
 -define(DIVISIBLEBY,          <<"divisibleBy">>).
 -define(DISALLOW,             <<"disallow">>).
 -define(EXTENDS,              <<"extends">>).
+-define(ALLOF,                <<"allOf">>).
 -define(ID,                   <<"id">>).
 -define(_REF,                 <<"$ref">>).                 % NOT IMPLEMENTED YET
 
@@ -315,9 +316,13 @@ check_value(Value, [{?DISALLOW, Disallow} | Attrs], State) ->
 check_value(Value, [{?EXTENDS, Extends} | Attrs], State) ->
   NewState = check_extends(Value, Extends, State),
   check_value(Value, Attrs, NewState);
+check_value(Value, [{?ALLOF, Schemas} | Attrs], State) ->
+  NewState = check_allof(Value, Schemas, State),
+  check_value(Value, Attrs, NewState);
 check_value(_Value, [], State) ->
   State;
-check_value(Value, [_Attr | Attrs], State) ->
+check_value(Value, [{_Attr, _Rule} | Attrs], State) ->
+  lager:debug("unhandled attribute ~s", [_Attr]),
   check_value(Value, Attrs, State).
 
 %% @doc 5.1.  type
@@ -1059,6 +1064,15 @@ check_extends(Value, Extends, State) ->
       end
   end.
 
+check_allof(_Value, [], State) ->
+  Error = {?schema_invalid, <<"allOf requires at least on JSON schema object">>, get_current_schema(State)},
+  handle_error(Error, State);
+check_allof(Value, Schemas, State) ->
+  lists:foldl(fun(Schema, StateAcc) ->
+                  lager:debug("check all of ~p", [Schema]),
+                  check_value(Value, unwrap(Schema), State)
+              end, State, Schemas).
+
 %% @private
 check_extends_array(Value, Extends, State) ->
   lists:foldl( fun(SchemaKey, CurrentState) ->
@@ -1178,6 +1192,9 @@ get_error_handler(#state{error_handler = ErrorHandler}) ->
 get_error_list(#state{error_list = ErrorList}) ->
   ErrorList.
 
+has_errors(#state{error_list=[]}) -> 'false';
+has_errors(_) -> 'true'.
+
 %% @private
 set_error_list(State, ErrorList) ->
   State#state{error_list = ErrorList}.
@@ -1219,5 +1236,5 @@ is_null(null)   -> true;
 is_null(_Value) -> false.
 
 %%% Local Variables:
-%%% erlang-indent-level: 2
+%%% erlang-indent-level: 4
 %%% End:
