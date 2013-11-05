@@ -97,7 +97,7 @@ get_bindings(Routing) ->
     [Vsn, Action | _] = binary:split(Routing, <<".">>, ['global']),
 
     ets:select(?MODULE, [{ {'_', '_', '_', '$1'}
-                           ,[{'orelse', 
+                           ,[{'orelse',
                                 {'=:=', '$1', <<Vsn/binary, ".", Action/binary>>}
                                 ,{'=:=', '$1', <<"*.", Action/binary>>}
                              }
@@ -293,7 +293,7 @@ flush_mod(CBMod, {Binding, _BParts, MFs, _Prefix}) ->
             lager:debug("removing mod ~s from ~s", [CBMod, Binding]),
             ets:update_element(?MODULE, Binding, {3, Filtered})
     end.
-            
+
 
 %%--------------------------------------------------------------------
 %% @private
@@ -410,22 +410,19 @@ fold_bind_results(MFs, Payload, Route) ->
 
 -spec fold_bind_results([{atom(), atom()},...] | [], term(), ne_binary(), non_neg_integer(), [{atom(), atom()},...] | []) -> term().
 fold_bind_results([{M,F}|MFs], [_|Tokens]=Payload, Route, MFsLen, ReRunQ) ->
-    %% lager:debug("executing(fold) ~s:~s/~p", [M, F, length(Payload)]),
-    case catch apply(M, F, Payload) of
-        'eoq' -> lager:debug("putting ~s to eoq", [M]), fold_bind_results(MFs, Payload, Route, MFsLen, [{M,F}|ReRunQ]);
+    try apply(M, F, Payload) of
+        'eoq' ->
+            lager:debug("putting ~s to eoq", [M]),
+            fold_bind_results(MFs, Payload, Route, MFsLen, [{M,F}|ReRunQ]);
         {'error', _E}=E ->
-            lager:debug("~s:~s/~p terminated fold with error: ~p", [M, F, length(Payload), _E]),
+            lager:debug("error: ~p", [_E]),
             E;
-        {'EXIT', {'undef', _}} ->
-            lager:debug("~s:~s/~p not defined, ignoring", [M, F, length(Payload)]),
-            fold_bind_results(MFs, Payload, Route, MFsLen, ReRunQ);            
-        {'EXIT', _E} -> 
-            ST = erlang:get_stacktrace(),
-            lager:debug("~s:~s/~p died unexpectedly: ~p", [M, F, length(Payload), _E]),
-            wh_util:log_stacktrace(ST),
-            fold_bind_results(MFs, Payload, Route, MFsLen, ReRunQ);
         Pay1 ->
             fold_bind_results(MFs, [Pay1|Tokens], Route, MFsLen, ReRunQ)
+    catch
+        _T:_E ->
+            lager:debug("excepted: ~s: ~p", [_T, _E]),
+            fold_bind_results(MFs, Payload, Route, MFsLen, ReRunQ)
     end;
 fold_bind_results([], Payload, Route, MFsLen, ReRunQ) ->
     case length(ReRunQ) of
