@@ -24,6 +24,7 @@
 -include_lib("whistle/include/wh_api.hrl").
 
 %% Media Request - when streaming is needed
+-define(MEDIA_REQ_ROUTING_KEY, <<"media_req">>).
 -define(MEDIA_REQ_HEADERS, [<<"Media-Name">>]).
 -define(OPTIONAL_MEDIA_REQ_HEADERS, [<<"Stream-Type">>, <<"Call-ID">>
                                          %% TTS-related flags
@@ -123,11 +124,11 @@ error_v(JObj) ->
 
 -spec bind_q(ne_binary(), wh_proplist()) -> 'ok'.
 bind_q(Queue, _Props) ->
-    amqp_util:bind_q_to_callevt(Queue, 'media_req').
+    amqp_util:bind_q_to_whapps(Queue, ?MEDIA_REQ_ROUTING_KEY).
 
 -spec unbind_q(ne_binary(), wh_proplist()) -> 'ok'.
 unbind_q(Queue, _Props) ->
-    amqp_util:unbind_q_from_callevt(Queue, 'media_req').
+    amqp_util:unbind_q_to_whapps(Queue, ?MEDIA_REQ_ROUTING_KEY).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -136,22 +137,22 @@ unbind_q(Queue, _Props) ->
 %%--------------------------------------------------------------------
 -spec declare_exchanges() -> 'ok'.
 declare_exchanges() ->
-    amqp_util:callevt_exchange().
+    amqp_util:whapps_exchange().
 
 -spec publish_req(api_terms()) -> 'ok'.
 -spec publish_req(api_terms(), ne_binary()) -> 'ok'.
 publish_req(JObj) ->
     publish_req(JObj, ?DEFAULT_CONTENT_TYPE).
 publish_req(Req, ContentType) ->
-    {ok, Payload} = wh_api:prepare_api_payload(Req, ?MEDIA_REQ_VALUES, fun ?MODULE:req/1),
-    amqp_util:callevt_publish(Payload, ContentType, 'media_req').
+    {'ok', Payload} = wh_api:prepare_api_payload(Req, ?MEDIA_REQ_VALUES, fun ?MODULE:req/1),
+    amqp_util:whapps_publish(?MEDIA_REQ_ROUTING_KEY, Payload, ContentType).
 
 -spec publish_resp(ne_binary(), api_terms()) -> 'ok'.
 -spec publish_resp(ne_binary(), api_terms(), ne_binary()) -> 'ok'.
 publish_resp(Queue, JObj) ->
     publish_resp(Queue, JObj, ?DEFAULT_CONTENT_TYPE).
 publish_resp(Queue, Resp, ContentType) ->
-    {ok, Payload} = wh_api:prepare_api_payload(Resp, ?MEDIA_RESP_VALUES, fun ?MODULE:resp/1),
+    {'ok', Payload} = wh_api:prepare_api_payload(Resp, ?MEDIA_RESP_VALUES, fun ?MODULE:resp/1),
     amqp_util:targeted_publish(Queue, Payload, ContentType).
 
 -spec publish_error(ne_binary(), api_terms()) -> 'ok'.
@@ -159,5 +160,5 @@ publish_resp(Queue, Resp, ContentType) ->
 publish_error(Queue, JObj) ->
     publish_error(Queue, JObj, ?DEFAULT_CONTENT_TYPE).
 publish_error(Queue, Error, ContentType) ->
-    {ok, Payload} = wh_api:prepare_api_payload(Error, ?MEDIA_ERROR_VALUES, fun ?MODULE:error/1),
+    {'ok', Payload} = wh_api:prepare_api_payload(Error, ?MEDIA_ERROR_VALUES, fun ?MODULE:error/1),
     amqp_util:targeted_publish(Queue, Payload, ContentType).
