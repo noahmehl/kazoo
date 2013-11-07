@@ -5,7 +5,7 @@
 %%% @end
 %%% @contributors
 %%%-------------------------------------------------------------------
--module(omnip_shared_listener).
+-module(omnipresence_shared_listener).
 
 -behaviour(gen_listener).
 
@@ -29,22 +29,21 @@
 -define(BINDINGS, [{'self', []}
                    ,{'presence', [{'restrict_to', ['update', 'reset']}]}
                    %% channel events that toggle presence lights
-                   ,{'call', [{'restrict_to', ['new_channel'
-                                               ,'answered_channel'
-                                               ,'cdr'
+                   ,{'call', [{'restrict_to', ['CHANNEL_CREATE'
+                                               ,'CHANNEL_ANSWER'
+                                               ,'CHANNEL_DESTROY'
                                               ]}
-                              ,{'callid', <<"*">>}
                              ]}
                    ,{'notifications', [{'restrict_to', ['presence_update']}]}
                   ]).
--define(RESPONDERS, [{{'omnip_subscriptions', 'handle_new_channel'}
-                      ,[{<<"channel">>, <<"new">>}]
+-define(RESPONDERS, [{{'omnip_subscriptions', 'handle_channel_create'}
+                      ,[{<<"call_event">>, <<"CHANNEL_CREATE">>}]
                      }
-                     ,{{'omnip_subscriptions', 'handle_answered_channel'}
-                       ,[{<<"channel">>, <<"answered">>}]
+                     ,{{'omnip_subscriptions', 'handle_channel_answer'}
+                       ,[{<<"call_event">>, <<"CHANNEL_ANSWER">>}]
                       }
-                     ,{{'omnip_subscriptions', 'handle_cdr'}
-                       ,[{<<"call_detail">>, <<"cdr">>}]
+                     ,{{'omnip_subscriptions', 'handle_channel_destroy'}
+                       ,[{<<"call_event">>, <<"CHANNEL_DESTROY">>}]
                       }
                      ,{{'omnip_subscriptions', 'handle_presence_update'}
                        ,[{<<"notification">>, <<"presence_update">>}]

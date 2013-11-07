@@ -13,9 +13,9 @@
 -export([start_link/0
 
          ,handle_subscribe/2
-         ,handle_new_channel/2
-         ,handle_cdr/2
-         ,handle_answered_channel/2
+         ,handle_channel_create/2
+         ,handle_channel_destroy/2
+         ,handle_channel_answer/2
          ,handle_presence_update/2
 
 
@@ -146,18 +146,18 @@ handle_presence_update(JObj, _Props) ->
     'true' = wapi_notifications:presence_update_v(JObj),
     maybe_send_update(JObj, wh_json:get_value(<<"State">>, JObj)).
 
-handle_new_channel(JObj, _Props) ->
-    'true' = wapi_call:new_channel_v(JObj),
+handle_channel_create(JObj, _Props) ->
+    'true' = wapi_call:event_v(JObj),
     wh_util:put_callid(JObj),
     maybe_send_update(JObj, ?PRESENCE_RINGING).
 
-handle_answered_channel(JObj, _Props) ->
-    'true' = wapi_call:answered_channel_v(JObj),
+handle_channel_answer(JObj, _Props) ->
+    'true' = wapi_call:event_v(JObj),
     wh_util:put_callid(JObj),
     maybe_send_update(JObj, ?PRESENCE_ANSWERED).
 
-handle_cdr(JObj, _Props) ->
-    'true' = wapi_call:cdr_v(JObj),
+handle_channel_destroy(JObj, _Props) ->
+    'true' = wapi_call:event_v(JObj),
     wh_util:put_callid(JObj),
     maybe_send_update(JObj, ?PRESENCE_HANGUP).
 
