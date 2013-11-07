@@ -86,16 +86,20 @@ maybe_check_account(#number{assigned_to='undefined'}=N) ->
     lager:debug("number ~p not assigned to an account", [N]),
     {'error', 'unassigned'};
 maybe_check_account(#number{assigned_to=AssignedTo, state = <<"port_in">>}=N) ->
-    lager:debug("number ~p is assigned to ~p in state port_in", [N, AssignedTo]),
+    lager:debug("number ~p is assigned to ~p in state port_in"
+                ,[N#number.number, AssignedTo]),
     check_account(N);
 maybe_check_account(#number{assigned_to=AssignedTo, state = <<"in_service">>}=N) ->
-    lager:debug("number ~p is assigned to ~p in state in_service", [N, AssignedTo]),
+    lager:debug("number ~p is assigned to ~p in state in_service"
+                ,[N#number.number, AssignedTo]),
     check_account(N);
 maybe_check_account(#number{assigned_to=AssignedTo, state = <<"port_out">>}=N) ->
-    lager:debug("number ~p is assigned to ~p in state port_in", [N, AssignedTo]),
+    lager:debug("number ~p is assigned to ~p in state port_in"
+                ,[N#number.number, AssignedTo]),
     check_account(N);
 maybe_check_account(#number{assigned_to=AssignedTo, state=State}=N) ->
-    lager:debug("number ~p assigned to acccount id ~p but in state ~p", [N, AssignedTo, State]),
+    lager:debug("number ~p assigned to acccount id ~p but in state ~p"
+                ,[N#number.number, AssignedTo, State]),
     {'error', {'not_in_service', AssignedTo}}.
 
 -spec check_account(ne_binary()) -> {'ok', ne_binary(), wh_proplist()} |
