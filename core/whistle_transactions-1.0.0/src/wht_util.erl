@@ -120,7 +120,7 @@ current_balance(AccountId) ->
 -spec call_cost(wh_json:object()) -> integer().
 call_cost(JObj) ->
     CCVs = wh_json:get_value(<<"Custom-Channel-Vars">>, JObj),
-    BillingSecs = wh_json:get_integer_value(<<"Billing-Seconds">>, JObj)
+    BillingSecs = wh_json:get_integer_value(<<"Billing-Seconds">>, JObj, 0)
         - wh_json:get_integer_value(<<"Billing-Seconds-Offset">>, CCVs, 0),
     %% if we transition from allotment to per_minute the offset has a slight
     %% fudge factor to allow accounts with no credit to terminate the call
